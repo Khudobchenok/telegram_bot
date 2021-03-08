@@ -25,18 +25,15 @@ public class EmailService {
         simpleMailMessage.setText(body);
         javaMailSender.send(simpleMailMessage);
         log.info("Сообщение отправлено по адресу " + to);
-        log.info("Текст сообщения:\n" + body);
+        log.debug("Текст сообщения:\n" + body);
     }
 
     public void sendMail(String name, String surname, String text, String email, Message message) {
-        log.info("Пользователь " + message.getFrom().getUserName() + " указал почту " + message.getText());
+        log.debug("Пользователь " + message.getFrom().getUserName() + " указал почту " + message.getText());
         User user = message.getFrom();
-        String firstName = user.getFirstName();
-        String lastName = user.getLastName();
-        String userName = user.getUserName();
-        if (user.getFirstName() == null) firstName = "";
-        if (user.getLastName() == null) lastName = "";
-        if (user.getUserName() == null) userName = "";
+        String firstName = user.getFirstName() != null ? user.getFirstName() : "";
+        String lastName = user.getLastName() != null ? user.getLastName() : "";
+        String userName = user.getUserName() != null ? user.getUserName() : "";
         String body = String.format("Дорогой(ая) %s %s.\n%s\n\nОтправитель: %s %s\nTelegram: %s",
                 name, surname, text, firstName, lastName, userName);
         sendMail(email, body, DEFAULT_TOPIC);

@@ -61,7 +61,7 @@ public class Bot extends TelegramLongPollingBot {
                 try {
                     handleMessage(message);
                 } catch (IncorrectEmailException e) {
-                    log.info("Пользователь " + message.getFrom().getUserName() + " ввел некорректный адрес почты");
+                    log.debug("Пользователь " + message.getFrom().getUserName() + " ввел некорректный адрес почты");
                     sendMsg(message, e.getMessage());
                 }
             }
@@ -73,15 +73,15 @@ public class Bot extends TelegramLongPollingBot {
             Integer messageNumber = messageService.putUserMessage(message.getFrom(), message);
             switch (messageNumber) {
                 case 1:
-                    log.info("Пользователь " + message.getFrom().getUserName() + " ввел имя " + message.getText());
+                    log.debug("Пользователь " + message.getFrom().getUserName() + " ввел имя " + message.getText());
                     sendMsg(message, "Введите фамилию:");
                     break;
                 case 2:
-                    log.info("Пользователь " + message.getFrom().getUserName() + " ввел фамилию " + message.getText());
+                    log.debug("Пользователь " + message.getFrom().getUserName() + " ввел фамилию " + message.getText());
                     sendMsg(message, "Введите ваше сообщение:");
                     break;
                 case 3:
-                    log.info("Пользователь " + message.getFrom().getUserName() + " ввел сообщение " + message.getText());
+                    log.debug("Пользователь " + message.getFrom().getUserName() + " ввел сообщение " + message.getText());
                     sendMsg(message, "Введите почту получателя:");
                     break;
                 case 4:
