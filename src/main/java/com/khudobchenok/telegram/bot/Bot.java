@@ -1,8 +1,8 @@
 package com.khudobchenok.telegram.bot;
 
 import com.khudobchenok.telegram.exception.IncorrectEmailException;
-import com.khudobchenok.telegram.service.EmailService;
 import com.khudobchenok.telegram.service.MessageService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -20,11 +20,9 @@ import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Component
 public class Bot extends TelegramLongPollingBot {
-
-    @Autowired
-    private EmailService emailService;
 
     @Autowired
     private MessageService messageService;
@@ -59,10 +57,11 @@ public class Bot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
-            if(!handleServiceMessage(message)) {
+            if (!handleServiceMessage(message)) {
                 try {
                     handleMessage(message);
                 } catch (IncorrectEmailException e) {
+                    log.info("Пользователь " + message.getFrom().getUserName() + " ввел некорректный адрес почты");
                     sendMsg(message, e.getMessage());
                 }
             }
@@ -71,37 +70,45 @@ public class Bot extends TelegramLongPollingBot {
 
     private void handleMessage(Message message) throws IncorrectEmailException {
         if (messageService.validateUserExpectation(message.getFrom())) {
-            Integer messageNumber = messageService.putUserMessage(message.getFrom(), message.getText());
+            Integer messageNumber = messageService.putUserMessage(message.getFrom(), message);
             switch (messageNumber) {
                 case 1:
+                    log.info("Пользователь " + message.getFrom().getUserName() + " ввел имя " + message.getText());
                     sendMsg(message, "Введите фамилию:");
                     break;
                 case 2:
-                    sendMsg(message, "Веедите ваше сообщение:");
+                    log.info("Пользователь " + message.getFrom().getUserName() + " ввел фамилию " + message.getText());
+                    sendMsg(message, "Введите ваше сообщение:");
                     break;
                 case 3:
+                    log.info("Пользователь " + message.getFrom().getUserName() + " ввел сообщение " + message.getText());
                     sendMsg(message, "Введите почту получателя:");
                     break;
                 case 4:
                     sendMsg(message, "Сообщение отправлено");
                     break;
             }
-        }else sendMsg(message, "Для отправки сообщения введите /begin");
+        } else sendMsg(message, "Для отправки сообщения введите /begin");
     }
 
     private boolean handleServiceMessage(Message message) {
         switch (message.getText()) {
             case "/start":
                 sendMsg(message, "Добро пожаловать " + message.getFrom().getFirstName());
+                log.info("Новый пользователь " + message.getFrom().getUserName());
+                messageService.deleteUserRow(message.getFrom());
                 return true;
             case "/help":
                 sendMsg(message, "Ведите системную команду /begin, введите данные которые просит бот и получите сообщение на указанную почту");
+                messageService.deleteUserRow(message.getFrom());
                 return true;
             case "/begin":
+                messageService.deleteUserRow(message.getFrom());
                 messageService.addUserRow(message.getFrom());
                 sendMsg(message, "Введите имя:");
                 return true;
-            default: return false;
+            default:
+                return false;
         }
     }
 
